@@ -1,9 +1,20 @@
+from enum import Enum
 from consts import MAP_PATH
 
 
-class MapReader:
+class WorldMap:
+    class Entry(Enum):
+        WALL =  '█'
+        FLOOR = ' '
+        POINT = '·'
+        CMAN =  'C'
+        GHOST = '∩'
+
     def __init__(self, map_file):
         self.matrix = self._load_map(map_file)
+        self.__starting_points_indexes = self.__get_point_indexes()
+        self.current_cman_idx = self.__get_cman_index()
+        self.current_ghost_idx = self.__get_ghost_index()
 
     def _load_map(self, map_file):
         matrix = []
@@ -13,25 +24,61 @@ class MapReader:
                 matrix.append([self.__convert_char(c) for c in strip_line])
         return matrix
     
-    def get_map(self):
-        return self.matrix
+    def __get_point_indexes(self):
+        point_indexes = []
+        for i, row in enumerate(self.matrix):
+            for j, val in enumerate(row):
+                if val == WorldMap.Entry.POINT.value:
+                    point_indexes.append((i, j))
+        return point_indexes
+    
+    def __get_cman_index(self):
+        for i, row in enumerate(self.matrix):
+            for j, val in enumerate(row):
+                if val == WorldMap.Entry.CMAN.value:
+                    return (i, j)
+        assert False, 'Cman not found'
+    
+    def __get_ghost_index(self):
+        for i, row in enumerate(self.matrix):
+            for j, val in enumerate(row):
+                if val == WorldMap.Entry.GHOST.value:
+                    return (i, j)
+        assert False, 'Ghost not found'
+    
+    def get_starting_points_indexes(self):
+        return self.__starting_points_indexes
+    
+    def to_string(self):
+        return '\n'.join([''.join(row) for row in self.matrix])
     
     def __convert_char(self, char):
         if char == 'W':
-            return '█'
+            return WorldMap.Entry.WALL.value
         if char == 'F':
-            return ' '
+            return WorldMap.Entry.FLOOR.value
         if char == 'P':
-            return '·'
+            return WorldMap.Entry.POINT.value
         if char == 'S':
-            return '∩'
+            return WorldMap.Entry.CMAN.value
         return char
     
-class MapConverter:
-    def convert_to_string(self, map_matrix):
-        return '\n'.join([''.join(row) for row in map_matrix])
+    def get(self, row, col):
+        return self.matrix[row][col]
+    
+    def remove_point(self, row, col):
+        self.matrix[row][col] = ' '
+    
+    def move_cman(self, row, col):
+        self.matrix[self.current_cman_idx[0]][self.current_cman_idx[1]] = WorldMap.Entry.FLOOR.value
+        self.matrix[row][col] = WorldMap.Entry.CMAN.value
+        self.current_cman_idx = (row, col)
+
+    def move_ghost(self, row, col):
+        self.matrix[self.current_ghost_idx[0]][self.current_ghost_idx[1]] = WorldMap.Entry.FLOOR.value
+        self.matrix[row][col] = WorldMap.Entry.GHOST.value
+        self.current_ghost_idx = (row, col)
     
 if __name__ == '__main__':
-    map_reader = MapReader(MAP_PATH)
-    map_converter = MapConverter()
-    print(map_converter.convert_to_string(map_reader.get_map()))
+    map_reader = WorldMap(MAP_PATH)
+    print(map_reader.to_string())
