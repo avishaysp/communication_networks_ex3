@@ -23,6 +23,8 @@ class MapReader:
             return ' '
         if char == 'P':
             return '·'
+        if char == 'S':
+            return '∩'
         return char
     
 class MapConverter:
