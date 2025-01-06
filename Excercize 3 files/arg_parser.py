@@ -1,5 +1,5 @@
 import argparse
-from const import DEFAULT_PORT
+from consts import DEFAULT_PORT
 
 class ArgParser:
 

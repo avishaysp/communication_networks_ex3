@@ -1,6 +1,6 @@
 import socket
 import select
-from const import SERVER_ADDR, MAP_PATH, BUFFER_SIZE, JOIN, PLAYER_MOVEMENT, QUIT, GAME_STATE_UPDATE, GAME_END, ERROR
+from consts import SERVER_ADDR, MAP_PATH, BUFFER_SIZE, JOIN, PLAYER_MOVEMENT, QUIT, GAME_STATE_UPDATE, GAME_END, ERROR
 
 from cman_game import Game
 
