@@ -1,3 +1,6 @@
+from consts import MAP_PATH
+
+
 class MapReader:
     def __init__(self, map_file):
         self.matrix = self._load_map(map_file)
@@ -21,3 +24,12 @@ class MapReader:
         if char == 'P':
             return '·'
         return char
+    
+class MapConverter:
+    def convert_to_string(self, map_matrix):
+        return '\n'.join([''.join(row) for row in map_matrix])
+    
+if __name__ == '__main__':
+    map_reader = MapReader(MAP_PATH)
+    map_converter = MapConverter()
+    print(map_converter.convert_to_string(map_reader.get_map()))
