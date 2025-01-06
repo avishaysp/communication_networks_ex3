@@ -1,4 +1,6 @@
-import pynput, time
+import sys
+import tty
+import termios
 
 def _flush_input():
     try:
@@ -8,6 +10,17 @@ def _flush_input():
     except ImportError:
         import sys, termios
         termios.tcflush(sys.stdin, termios.TCIOFLUSH)
+
+def get_single_char():
+    """Reads a single character from standard input."""
+    fd = sys.stdin.fileno()
+    old_settings = termios.tcgetattr(fd)
+    try:
+        tty.setraw(fd)
+        char = sys.stdin.read(1)
+    finally:
+        termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
+    return char
 
 def get_pressed_keys(keys_filter = None):
     """
@@ -23,23 +36,10 @@ def get_pressed_keys(keys_filter = None):
     list[str]: A list of currently pressed keys.
 
     """
-    keys_lst = []
-    def on_press(key):
-        try:
-            if key.char not in keys_lst:
-                keys_lst.append(key.char)
-        except AttributeError:
-            if key not in keys_lst:
-                keys_lst.append(str(key))
-    listener = pynput.keyboard.Listener(on_press=on_press)
-    listener.start()
-    time.sleep(0.01)
-    listener.stop()
-    _flush_input()
-    if keys_filter is None:
-        return keys_lst
-    else:
-        return [k for k in keys_filter if k in keys_lst]
+    ch = get_single_char()
+    if keys_filter:
+        return [ch] if ch in keys_filter else []
+    return [ch]
 
 def clear_print(*args, **kwargs):
     """
