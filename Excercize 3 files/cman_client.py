@@ -109,8 +109,9 @@ class Client:
     def __handle_game_end(self, data):
         pass
 
-    def __handle_error(self, data):
-        pass
+    def __handle_error(self, data: bytes):
+        err_code = data[-1]
+        clear_print(f'Error: {ERROR_DICT[err_code]}')
     
     def _process_user_input(self):
         pass
