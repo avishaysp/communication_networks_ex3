@@ -107,7 +107,11 @@ class Client:
                 points_flags.append(bool(byte & (1 << i)))
 
     def __handle_game_end(self, data):
-        pass
+        winner = data[0]
+        s_score = data[1]
+        c_score = data[2]
+        clear_print(f'Game Over!\nWinner: {Client.Role(winner).name}\nScores: Cman: {c_score}, Ghost: {s_score}')
+        exit()
 
     def __handle_error(self, data: bytes):
         err_code = data[-1]
