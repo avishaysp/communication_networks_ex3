@@ -19,7 +19,7 @@ class Client:
         CMAN = 1
         GHOST = 2
 
-    def __init__(self, role: Role, server_address):
+    def __init__(self, role: Role, server_address: tuple):
         self.server_address = server_address
         self.role = role
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -118,4 +118,11 @@ class Client:
         clear_print(f'Error: {ERROR_DICT[err_code]}')
     
     def _process_user_input(self):
-        pass
+        keys: list = get_pressed_keys()
+        if len(keys):
+            self.__send_movement(keys)
+
+    def __send_movement(self, keys):
+        selected_key = keys[0]
+        # non blocking send
+        self.socket.sendto(self.DIRECTION_TO_BYTE[selected_key], self.server_address)
