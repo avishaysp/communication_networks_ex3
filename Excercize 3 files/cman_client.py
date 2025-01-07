@@ -4,7 +4,7 @@ import select
 from time import sleep
 from typing import List
 from cman_utils import get_pressed_keys, clear_print
-from consts import BUFFER_SIZE, ERROR, GAME_END, GAME_STATE_UPDATE, MAP_PATH
+from consts import BUFFER_SIZE, ERROR, ERROR_DICT, GAME_END, GAME_STATE_UPDATE, MAP_PATH
 from cman_game import MAX_ATTEMPTS
 from client_map import WorldMap
 
@@ -68,12 +68,15 @@ class Client:
             self.__handle_error(data[1:])
     
     def __update_map(self, data):
-        _ = data[0] # freeze - not used
+        freeze = data[0]
         c_coords_b = data[1:3]
         s_coords_b = data[3:5]
         attempts = data[5]
         collected = data[6:] # representing 40 bit flags if the points were collected
         assert len(collected) == 5, f'Expected 5 collected bytes, got {len(collected)}'
+
+        if not freeze:
+            self.status = Client.Status.PLAYING
 
         self.__update_attempts(attempts)
 
@@ -110,6 +113,7 @@ class Client:
         winner = data[0]
         s_score = data[1]
         c_score = data[2]
+        self.status = Client.Status.GAME_OVER
         clear_print(f'Game Over!\nWinner: {Client.Role(winner).name}\nScores: Cman: {c_score}, Ghost: {s_score}')
         exit()
 
