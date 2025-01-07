@@ -1,5 +1,5 @@
 import argparse
-from consts import DEFAULT_PORT
+from consts import DEFAULT_PORT, STR_TO_ROLE
 
 class ArgParser:
 
@@ -37,5 +37,5 @@ class ArgParser:
             default=DEFAULT_PORT,
             help=f"The port number to connect to (default: {DEFAULT_PORT})"
         )
-
-        return parser.parse_args()
+        args = parser.parse_args()
+        return STR_TO_ROLE[args.role], args.addr, args.port

@@ -38,7 +38,7 @@ class CManServer:
         self.start_game()
 
     def start_game(self):
-
+        print("Game is starting...")
         try:
             while True:
                 read_sockets, _, _ = select.select([self.server_socket], [], [], 0)
@@ -46,8 +46,9 @@ class CManServer:
                 for sock in read_sockets:
                     if sock is self.server_socket:
                         data, client_address = self.server_socket.recvfrom(BUFFER_SIZE)
+                        data_list = list(data)
 
-                        error = self._process_data(data, client_address)
+                        error = self._process_data(data_list, client_address)
 
                         if error is not None:
                             self._send_error_message(error, client_address)
@@ -57,8 +58,8 @@ class CManServer:
         except KeyboardInterrupt:
             print("\nServer shutting down...")
 
-        except Exception as e:
-            print(e)
+        # except Exception as e:
+        #     print(e)
 
         finally:
             self.server_socket.close()
@@ -88,14 +89,14 @@ class CManServer:
 
         if self._verify_participants(client_address):
             return 3
-
+        
         role = data[1]
 
         if role == 0x00:
             self.watchers.append(client_address)
             return
 
-        message = self._fill_cman_or_ghost(data, client_address)
+        message = self._fill_cman_or_ghost(role, client_address)
         if self.cman is not None and self.cman is not None and GameStatus.PREGAME:
             self.game_status = GameStatus.WAITING
 
@@ -103,10 +104,12 @@ class CManServer:
 
     def _fill_cman_or_ghost(self, role, client_address):
         if role == 0x01 and not self.cman:
+            print(f"Cman {client_address} joined")
             self.cman = client_address
             return
 
         if role == 0x02 and not self.ghost:
+            print(f"Ghost {client_address} joined")
             self.ghost = client_address
             return
 
@@ -162,12 +165,14 @@ class CManServer:
         return self.cman == client_address or self.ghost == client_address or client_address in self.watchers
 
     def _send_status_message(self):
+        print("Sending status message")
         if self.game_status == GameStatus.END:
             self._send_winning_status()
             return
         self._send_game_stats()
 
     def _send_winning_status(self):
+        print("Sending winning status")
         winner = 0x01 if self.game.get_winner() == 0 else 0x02
         lives, score = self.game.get_game_progress()
 
@@ -197,10 +202,12 @@ class CManServer:
         self._send_message(message, client)
 
     def _send_game_stats(self):
+        print("Sending game stats")
         freeze_status_list = [GameStatus.PREGAME, GameStatus.WAITING, GameStatus.START]
         should_cman_freeze = 0x01 if self.game_status == GameStatus.PREGAME else 0x00
         should_ghost_freeze = 0x01 if self.game_status in freeze_status_list else 0x00
 
+        print(f'Cman freeze: {should_cman_freeze}, Ghost freeze: {should_ghost_freeze}')
         lives, _ = self.game.get_game_progress()
         attempts = _convert_lives(lives)
 
@@ -211,16 +218,19 @@ class CManServer:
         converted_points = _convert_point_map_to_byte_stream(points)
 
         for watcher in self.watchers:
-            message = _create_bytes_message(GAME_STATE_UPDATE, 0x01, cman_cords, ghost_cords, attempts, *converted_points)
+            message = _create_bytes_message(GAME_STATE_UPDATE, 0x01, *cman_cords, *ghost_cords, attempts, *converted_points)
             self._send_message(message, watcher)
 
-        cman_message = _create_bytes_message(GAME_STATE_UPDATE, should_cman_freeze, cman_cords, ghost_cords, attempts, *converted_points)
-        self._send_message(cman_message, self.cman)
+        if self.cman is not None:
+            cman_message = _create_bytes_message(GAME_STATE_UPDATE, should_cman_freeze, *cman_cords, *ghost_cords, attempts, *converted_points)
+            self._send_message(cman_message, self.cman)
 
-        ghost_message = _create_bytes_message(GAME_STATE_UPDATE, should_ghost_freeze, cman_cords, ghost_cords, attempts, *converted_points)
-        self._send_message(ghost_message, self.ghost)
+        if self.ghost is not None:
+            ghost_message = _create_bytes_message(GAME_STATE_UPDATE, should_ghost_freeze, *cman_cords, *ghost_cords, attempts, *converted_points)
+            self._send_message(ghost_message, self.ghost)
 
     def _send_message(self, message, client):
+        print(client)
         self.server_socket.sendto(message, client)
 
     def _has_game_change_mode(self, player_to_move, direction_to_move):

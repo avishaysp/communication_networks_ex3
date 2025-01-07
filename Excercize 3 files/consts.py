@@ -31,3 +31,9 @@ DIRECTION_TO_BYTE = {
     's': 2,
     'd': 3,
 }
+
+STR_TO_ROLE = {
+    "spectator":    0,
+    "cman":         1,
+    "ghost":        2,
+}

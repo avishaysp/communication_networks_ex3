@@ -37,6 +37,7 @@ class WorldMap:
             for j, val in enumerate(row):
                 if val == WorldMap.Entry.CMAN.value:
                     return (i, j)
+        print(self.to_string())
         assert False, 'Cman not found'
     
     def __get_ghost_index(self):
@@ -44,6 +45,8 @@ class WorldMap:
             for j, val in enumerate(row):
                 if val == WorldMap.Entry.GHOST.value:
                     return (i, j)
+
+        print(self.to_string())
         assert False, 'Ghost not found'
     
     def get_starting_points_indexes(self):
@@ -60,7 +63,7 @@ class WorldMap:
         if char == 'P':
             return WorldMap.Entry.POINT.value
         if char == 'S':
-            return WorldMap.Entry.CMAN.value
+            return WorldMap.Entry.GHOST.value
         return char
     
     def get(self, row, col):

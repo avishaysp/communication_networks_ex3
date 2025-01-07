@@ -21,15 +21,17 @@ class Role(Enum):
 
 class Client:
 
-    def __init__(self, role: Role, server_address: tuple):
+    def __init__(self, role, server_address: tuple):
         self.server_address = server_address
-        self.role = role
+        self.role = Role(role)
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.status = Status.WAITING
         self.map = WorldMap(MAP_PATH)
         self.attempts = 0
 
     def run(self):
+        print('Running client...')
+        get_pressed_keys()
         self.join_game()
         while self.status != Status.GAME_OVER:
             if self.role != Role.SPECTATOR and self.status == Status.PLAYING:
@@ -38,6 +40,7 @@ class Client:
 
     def join_game(self):
         self.__send_msg(JOIN, self.role.value.to_bytes(1, 'big'))
+        print(f'Requested to join as {self.role.name}')
 
     def _handle_server_input(self):
         datas = self.__recv_data()
@@ -83,6 +86,7 @@ class Client:
 
         if not freeze:
             self.status = Status.PLAYING
+            print('Game started!')
 
         self.__update_attempts(attempts)
 
@@ -114,6 +118,7 @@ class Client:
         for byte in collected:
             for i in range(8):
                 points_flags.append(bool(byte & (1 << i)))
+        return points_flags
 
     def __handle_game_end(self, data):
         winner = data[0]
