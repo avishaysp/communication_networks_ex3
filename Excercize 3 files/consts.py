@@ -24,3 +24,10 @@ ERROR_DICT = [
     'Non players are not allowed to send move commands',
     'bad format error, quit request is not correct'
 ]
+
+DIRECTION_TO_BYTE = {
+    'w': 0,
+    'a': 1,
+    's': 2,
+    'd': 3,
+}
