@@ -6,7 +6,7 @@ BUFFER_SIZE = 1024
 JOIN = 0x00
 PLAYER_MOVEMENT = 0x01
 QUIT = 0x0F
-GAME_STATE_UPDATE = 0X80
+GAME_STATE_UPDATE = 0x80
 GAME_END = 0x8F
 ERROR = 0xFF
 
@@ -24,3 +24,16 @@ ERROR_DICT = [
     'Non players are not allowed to send move commands',
     'bad format error, quit request is not correct'
 ]
+
+DIRECTION_TO_BYTE = {
+    'w': 0,
+    'a': 1,
+    's': 2,
+    'd': 3,
+}
+
+STR_TO_ROLE = {
+    "spectator":    0,
+    "cman":         1,
+    "ghost":        2,
+}

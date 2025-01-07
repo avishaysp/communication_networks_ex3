@@ -36,9 +36,11 @@ def get_pressed_keys(keys_filter = None):
     list[str]: A list of currently pressed keys.
 
     """
+    print("Press any key to continue...")
     ch = get_single_char()
     if keys_filter:
         return [ch] if ch in keys_filter else []
+    print("Pressed key:", ch)
     return [ch]
 
 def clear_print(*args, **kwargs):
