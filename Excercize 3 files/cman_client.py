@@ -4,34 +4,40 @@ import select
 from time import sleep
 from typing import List
 from cman_utils import get_pressed_keys, clear_print
-from consts import BUFFER_SIZE, ERROR, ERROR_DICT, GAME_END, GAME_STATE_UPDATE, MAP_PATH
+from consts import *
 from cman_game import MAX_ATTEMPTS
 from client_map import WorldMap
 
+
+class Status(Enum):
+    WAITING = 0
+    PLAYING = 1
+    GAME_OVER = 2
+
+class Role(Enum):
+    SPECTATOR = 0
+    CMAN = 1
+    GHOST = 2
+
 class Client:
-    class Status(Enum):
-        WAITING = 0
-        PLAYING = 1
-        GAME_OVER = 2
-    
-    class Role(Enum):
-        SPECTATOR = 0
-        CMAN = 1
-        GHOST = 2
 
     def __init__(self, role: Role, server_address: tuple):
         self.server_address = server_address
         self.role = role
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        self.status = Client.Status.WAITING
+        self.status = Status.WAITING
         self.map = WorldMap(MAP_PATH)
         self.attempts = 0
 
     def run(self):
-        while self.status != Client.Status.GAME_OVER:
-            if self.role != Client.Role.SPECTATOR and self.status == Client.Status.PLAYING:
+        self.join_game()
+        while self.status != Status.GAME_OVER:
+            if self.role != Role.SPECTATOR and self.status == Status.PLAYING:
                 self._process_user_input()
             self._handle_server_input()
+
+    def join_game(self):
+        self.__send_msg(JOIN, self.role.value.to_bytes(1, 'big'))
 
     def _handle_server_input(self):
         datas = self.__recv_data()
@@ -76,7 +82,7 @@ class Client:
         assert len(collected) == 5, f'Expected 5 collected bytes, got {len(collected)}'
 
         if not freeze:
-            self.status = Client.Status.PLAYING
+            self.status = Status.PLAYING
 
         self.__update_attempts(attempts)
 
@@ -113,8 +119,8 @@ class Client:
         winner = data[0]
         s_score = data[1]
         c_score = data[2]
-        self.status = Client.Status.GAME_OVER
-        clear_print(f'Game Over!\nWinner: {Client.Role(winner).name}\nScores: Cman: {c_score}, Ghost: {s_score}')
+        self.status = Status.GAME_OVER
+        clear_print(f'Game Over!\nWinner: {Role(winner).name}\nScores: Cman: {c_score}, Ghost: {s_score}')
         exit()
 
     def __handle_error(self, data: bytes):
@@ -126,7 +132,9 @@ class Client:
         if len(keys):
             self.__send_movement(keys)
 
+    def __send_msg(self, op_code: int, data: bytes):
+        self.socket.sendto(bytes([op_code]) + data, self.server_address)
+
     def __send_movement(self, keys):
         selected_key = keys[0]
-        # non blocking send
-        self.socket.sendto(self.DIRECTION_TO_BYTE[selected_key], self.server_address)
+        self.__send_msg(PLAYER_MOVEMENT, DIRECTION_TO_BYTE[selected_key].to_bytes(1, 'big'))
