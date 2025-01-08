@@ -97,8 +97,10 @@ class CManServer:
             return
 
         message = self._fill_cman_or_ghost(role, client_address)
-        if self.cman is not None and self.cman is not None and GameStatus.PREGAME:
+        if self.cman is not None and self.ghost is not None and (self.game_status == GameStatus.PREGAME):
             self.game_status = GameStatus.WAITING
+
+        print(f'server status: {self.game_status}')
 
         return message
 
