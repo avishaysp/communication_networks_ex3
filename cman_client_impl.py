@@ -24,10 +24,24 @@ class Client:
     def __init__(self, role, server_address: tuple):
         self.server_address = server_address
         self.role = Role(role)
-        self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        self.init_socket()
         self.status = Status.WAITING
         self.map = WorldMap(MAP_PATH)
         self.attempts = 0
+
+    def close(self):
+        self.socket.close()
+
+    def exit(self, msg):
+        print(msg)
+        self.close()
+        exit()
+
+    def init_socket(self):
+        try:
+            self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        except socket.error as e:
+            self.exit('Failed to create socket')
 
     def run(self):
         print('Running client...')
@@ -56,14 +70,17 @@ class Client:
 
     def __recv_data(self):
         datas = []
-        while True:
-            ready, _, _ = select.select([self.socket], [], [], 0)
-            if not ready:
-                break
-            
-            raw, addr = self.socket.recvfrom(BUFFER_SIZE)
-            if addr == self.server_address:
-                datas.append(raw)
+        try:
+            while True:
+                ready, _, _ = select.select([self.socket], [], [], 0)
+                if not ready:
+                    break
+                
+                raw, addr = self.socket.recvfrom(BUFFER_SIZE)
+                if addr == self.server_address:
+                    datas.append(raw)
+        except socket.error as e:
+            self.exit('Failed to receive data from server. Exiting...')
         
         return datas
     
@@ -126,7 +143,7 @@ class Client:
         c_score = data[2]
         self.status = Status.GAME_OVER
         clear_print(f'Game Over!\nWinner: {Role(winner).name}\nScores: Cman: {c_score}, Ghost: {s_score}')
-        exit()
+        self.exit('Exiting...')
 
     def __handle_error(self, data: bytes):
         err_code = data[-1]
@@ -142,7 +159,10 @@ class Client:
         self.__send_movement(selected_key)
 
     def __send_msg(self, op_code: int, data: bytes):
-        self.socket.sendto(bytes([op_code]) + data, self.server_address)
+        try:
+            self.socket.sendto(bytes([op_code]) + data, self.server_address)
+        except socket.error as e:
+            self.exit('Failed to send message to server. Exiting...')
 
     def __send_movement(self, selected_key):
         if selected_key not in DIRECTION_TO_BYTE:
@@ -152,5 +172,4 @@ class Client:
 
     def _quit_game(self):
         self.__send_msg(QUIT, b'')
-        print('Quitting game...')
-        exit()
+        self.exit('Quitting game...')

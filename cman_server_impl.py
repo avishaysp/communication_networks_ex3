@@ -28,8 +28,11 @@ class CManServer:
         self.game_status = GameStatus.PREGAME
 
     def start_server(self):
-
-        self.server_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        try:
+            self.server_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        except socket.error as e:
+            print('Failed to create socket. Exiting...')
+            exit()
         server_address = (SERVER_ADDR, self.port)
         self.server_socket.bind(server_address)
 
@@ -43,23 +46,23 @@ class CManServer:
             while True:
                 read_sockets, _, _ = select.select([self.server_socket], [], [], 0)
 
-                for sock in read_sockets:
-                    if sock is self.server_socket:
+                if len(read_sockets):
+                    try:
                         data, client_address = self.server_socket.recvfrom(BUFFER_SIZE)
-                        data_list = list(data)
+                    except socket.error as e:
+                        print('Failed to receive data from client. Exiting...')
+                        exit()
+                    data_list = list(data)
 
-                        error = self._process_data(data_list, client_address)
+                    error = self._process_data(data_list, client_address)
 
-                        if error is not None:
-                            self._send_error_message(error, client_address)
+                    if error is not None:
+                        self._send_error_message(error, client_address)
 
-                        self._send_status_message()
+                    self._send_status_message()
 
         except KeyboardInterrupt:
             print("\nServer shutting down...")
-
-        # except Exception as e:
-        #     print(e)
 
         finally:
             self.server_socket.close()
@@ -239,8 +242,11 @@ class CManServer:
             self._send_message(ghost_message, self.ghost)
 
     def _send_message(self, message, client):
-        print(client)
-        self.server_socket.sendto(message, client)
+        try:
+            self.server_socket.sendto(message, client)
+        except socket.error as e:
+            print(f'Failed to send message to {client}. Exiting...')
+            exit()
 
     def _has_game_change_mode(self, player_to_move, direction_to_move):
         before_lives, _ = self.game.get_game_progress()
