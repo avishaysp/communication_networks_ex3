@@ -28,6 +28,7 @@ class Client:
         self.status = Status.WAITING
         self.map = WorldMap(MAP_PATH)
         self.attempts = 0
+        self.__msg = ''
 
     def close(self):
         self.socket.close()
@@ -52,6 +53,9 @@ class Client:
                 self._process_user_input()
             self._handle_server_input()
 
+    def msg(self):
+        return "Message: " + self.__msg if self.__msg else ''
+
     def join_game(self):
         self.__send_msg(JOIN, self.role.value.to_bytes(1, 'big'))
         print(f'Requested to join as {self.role.name}')
@@ -63,10 +67,10 @@ class Client:
         
         for data in datas:
             self.__handle_server_message(data)
-        clear_print(self.attempts_repr() + self.map.to_string())
+        clear_print('\n'.join([self.msg(), self.attempts_repr(), self.map.to_string()]))
 
     def attempts_repr(self):
-        return f"Attempts: {self.attempts}/{MAX_ATTEMPTS}\n"
+        return f"Attempts: {self.attempts}/{MAX_ATTEMPTS}"
 
     def __recv_data(self):
         datas = []
@@ -103,7 +107,7 @@ class Client:
 
         if not freeze:
             self.status = Status.PLAYING
-            print('Game started!')
+            self.__msg = 'Game started!'
 
         self.__update_attempts(attempts)
 
@@ -147,7 +151,10 @@ class Client:
 
     def __handle_error(self, data: bytes):
         err_code = data[-1]
-        clear_print(f'Error: {ERROR_DICT[err_code]}')
+        self.__msg = f' Server Error: {ERROR_DICT[err_code]}' if err_code < len(ERROR_DICT) else 'Unknown error'
+        if err_code <= 5:
+            print(self.msg())
+            self.exit('Exiting...')
     
     def _process_user_input(self):
         keys: list = get_pressed_keys()
