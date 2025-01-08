@@ -134,15 +134,23 @@ class Client:
     
     def _process_user_input(self):
         keys: list = get_pressed_keys()
-        if len(keys):
-            self.__send_movement(keys)
+        if not len(keys):
+            return
+        selected_key = keys[0].lower() # only process the first key, ignore the rest
+        if selected_key in ['^C', '^D', 'q']:
+            self._quit_game()
+        self.__send_movement(selected_key)
 
     def __send_msg(self, op_code: int, data: bytes):
         self.socket.sendto(bytes([op_code]) + data, self.server_address)
 
-    def __send_movement(self, keys):
-        selected_key = keys[0]
+    def __send_movement(self, selected_key):
         if selected_key not in DIRECTION_TO_BYTE:
             print('Invalid key! Please use the WASD keys.')
             return
         self.__send_msg(PLAYER_MOVEMENT, DIRECTION_TO_BYTE[selected_key].to_bytes(1, 'big'))
+
+    def _quit_game(self):
+        self.__send_msg(QUIT, b'')
+        print('Quitting game...')
+        exit()
