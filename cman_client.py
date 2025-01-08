@@ -142,4 +142,7 @@ class Client:
 
     def __send_movement(self, keys):
         selected_key = keys[0]
+        if selected_key not in DIRECTION_TO_BYTE:
+            print('Invalid key! Please use the WASD keys.')
+            return
         self.__send_msg(PLAYER_MOVEMENT, DIRECTION_TO_BYTE[selected_key].to_bytes(1, 'big'))

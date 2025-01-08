@@ -99,6 +99,7 @@ class CManServer:
         message = self._fill_cman_or_ghost(role, client_address)
         if self.cman is not None and self.ghost is not None and (self.game_status == GameStatus.PREGAME):
             self.game_status = GameStatus.WAITING
+            self.game.next_round()
 
         print(f'server status: {self.game_status}')
 
@@ -119,6 +120,7 @@ class CManServer:
 
     # Move requests
     def _process_player_movement_request(self, data, client_address):
+        print("Processing player movement request")
         if self.game_status == GameStatus.PREGAME:
             return 6
 
@@ -128,11 +130,13 @@ class CManServer:
         if client_address in self.watchers:
             return 8
 
-        player_to_move = 0 if self.cman == client_address else 1
+        player_to_move = Player.CMAN if self.cman == client_address else Player.SPIRIT
 
         direction_to_move = data[1]
 
         move_applied, changed_status = self._has_game_change_mode(player_to_move, direction_to_move)
+
+        print(f'Move applied: {move_applied}, changed status: {changed_status}')
 
         if self.game.get_winner() != Player.NONE:
             self.game_status = GameStatus.END
@@ -215,6 +219,8 @@ class CManServer:
 
         cords = self.game.get_current_players_coords()
         cman_cords, ghost_cords = cords[0], cords[1]
+
+        print(f'Cman cords: {cman_cords}, Ghost cords: {ghost_cords}')
 
         points = self.game.get_points()
         converted_points = _convert_point_map_to_byte_stream(points)
