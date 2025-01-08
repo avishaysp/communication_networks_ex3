@@ -196,7 +196,8 @@ class CManServer:
 
             time.sleep(1.0)
 
-        self.game = None
+        print("Game ended. New game starting...")
+        self.game.restart_game()
         self.ghost = None
         self.cman = None
         self.watchers = []
