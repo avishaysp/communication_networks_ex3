@@ -2,7 +2,7 @@ import socket
 import select
 from enum import IntEnum
 
-from consts import SERVER_ADDR, MAP_PATH, BUFFER_SIZE, JOIN, PLAYER_MOVEMENT, QUIT, GAME_STATE_UPDATE, GAME_END, ERROR
+from consts import ERROR_DICT, SERVER_ADDR, MAP_PATH, BUFFER_SIZE, JOIN, PLAYER_MOVEMENT, QUIT, GAME_STATE_UPDATE, GAME_END, ERROR
 import time
 
 from cman_game import Game, Player, MAX_ATTEMPTS
@@ -55,6 +55,8 @@ class CManServer:
                     data_list = list(data)
 
                     error = self._process_data(data_list, client_address)
+
+                    print(f"Error: {ERROR_DICT[error]}")
 
                     if error is not None:
                         self._send_error_message(error, client_address)
@@ -273,7 +275,7 @@ def _create_bytes_message(*args):
 def _convert_point_map_to_byte_stream(points_dict):
     bit_list = []
     for coord in sorted(points_dict.keys(), key=lambda c: (c[0], c[1])):
-        bit_list.append(points_dict[coord])
+        bit_list.append(1 - points_dict[coord])
 
     byte_list = [int(''.join(map(str, bit_list[i:i + 8])), 2) for i in range(0, 40, 8)]
 
