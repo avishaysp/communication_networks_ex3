@@ -49,8 +49,7 @@ class Client:
         get_pressed_keys()
         self.join_game()
         while self.status != Status.GAME_OVER:
-            if self.role != Role.SPECTATOR and self.status == Status.PLAYING:
-                self._process_user_input()
+            self._process_user_input()
             self._handle_server_input()
 
     def msg(self):
@@ -84,7 +83,7 @@ class Client:
                 if addr == self.server_address:
                     datas.append(raw)
         except socket.error as e:
-            self.exit('Failed to receive data from server. Exiting...')
+            self.exit(f'Failed to receive data from server. Error: {e}\nExiting...')
         
         return datas
     
@@ -108,23 +107,25 @@ class Client:
         if not freeze:
             self.status = Status.PLAYING
             self.__msg = 'Game started!'
+        else:
+            self.__msg = 'Connected to server. Cannot move yet.'
 
         self.__update_attempts(attempts)
 
-        # first add points/floor, then override with cman & ghost:
+        self.map.remove_players()
         self.__update_points(collected)
-        self.__update_cman_ghost_locations(c_coords_b, s_coords_b)
+        self.__place_cman_ghost(c_coords_b, s_coords_b)
 
     def __update_attempts(self, attempts):
         self.attempts = attempts
 
-    def __update_cman_ghost_locations(self, c_coords_b, s_coords_b):
+    def __place_cman_ghost(self, c_coords_b, s_coords_b):
         c_coords = c_coords_b[0], c_coords_b[1]
         s_coords = s_coords_b[0], s_coords_b[1]
         assert self.map.get(*c_coords) != WorldMap.Entry.WALL.value, 'Cman is in a wall!'
         assert self.map.get(*s_coords) != WorldMap.Entry.WALL.value, 'Ghost is in a wall!'
-        self.map.move_cman(*c_coords)
-        self.map.move_ghost(*s_coords)
+        self.map.place_cman(*c_coords)
+        self.map.place_ghost(*s_coords)
 
     def __update_points(self, collected):
         starting_point_indexes = self.map.get_starting_points_indexes()
@@ -132,13 +133,15 @@ class Client:
         for i, (row, col) in enumerate(starting_point_indexes):
             if points_flags[i]:
                 self.map.remove_point(row, col)
+            else:
+                self.map.place_point(row, col)
 
 
     def __get_points_flags(self, collected) -> List[bool]:
         points_flags = []
         for byte in collected:
             for i in range(8):
-                points_flags.append(bool(byte & (1 << i)))
+                points_flags.append(bool(byte & (128 >> i)))
         return points_flags
 
     def __handle_game_end(self, data):
@@ -161,9 +164,12 @@ class Client:
         if not len(keys):
             return
         selected_key = keys[0].lower() # only process the first key, ignore the rest
+
         if selected_key in ['^C', '^D', 'q']:
             self._quit_game()
-        self.__send_movement(selected_key)
+
+        if self.role != Role.SPECTATOR and self.status == Status.PLAYING:
+            self.__send_movement(selected_key)
 
     def __send_msg(self, op_code: int, data: bytes):
         try:
@@ -173,7 +179,7 @@ class Client:
 
     def __send_movement(self, selected_key):
         if selected_key not in DIRECTION_TO_BYTE:
-            print(f'Invalid key: {selected_key} Please use the WASD keys.')
+            print(f'Invalid key: {selected_key} Please use the WASD keys to move, Q to exit.')
             return
         self.__send_msg(PLAYER_MOVEMENT, DIRECTION_TO_BYTE[selected_key].to_bytes(1, 'big'))
 

@@ -50,15 +50,14 @@ class CManServer:
                     try:
                         data, client_address = self.server_socket.recvfrom(BUFFER_SIZE)
                     except socket.error as e:
-                        print('Failed to receive data from client. Exiting...')
+                        print(f'Failed to receive data from client: {e}\nExiting...')
                         exit()
                     data_list = list(data)
 
                     error = self._process_data(data_list, client_address)
 
-                    print(f"Error: {ERROR_DICT[error]}")
-
                     if error is not None:
+                        print(f"Error: {ERROR_DICT[error]}")
                         self._send_error_message(error, client_address)
 
                     self._send_status_message()
@@ -176,7 +175,6 @@ class CManServer:
         return self.cman == client_address or self.ghost == client_address or client_address in self.watchers
 
     def _send_status_message(self):
-        print("Sending status message")
         if self.game_status == GameStatus.END:
             self._send_winning_status()
             return
@@ -219,7 +217,6 @@ class CManServer:
         should_cman_freeze = 0x01 if self.game_status == GameStatus.PREGAME else 0x00
         should_ghost_freeze = 0x01 if self.game_status in freeze_status_list else 0x00
 
-        print(f'Cman freeze: {should_cman_freeze}, Ghost freeze: {should_ghost_freeze}')
         lives, _ = self.game.get_game_progress()
         attempts = _convert_lives(lives)
 
@@ -229,6 +226,8 @@ class CManServer:
         print(f'Cman cords: {cman_cords}, Ghost cords: {ghost_cords}')
 
         points = self.game.get_points()
+        print(f'Points: {points}')
+        print(f'number 1 in points: {sum(points.values())}')
         converted_points = _convert_point_map_to_byte_stream(points)
 
         for watcher in self.watchers:
@@ -247,7 +246,7 @@ class CManServer:
         try:
             self.server_socket.sendto(message, client)
         except socket.error as e:
-            print(f'Failed to send message to {client}. Exiting...')
+            print(f'Failed to send message to {client}. Error: {e}\nExiting...')
             exit()
 
     def _has_game_change_mode(self, player_to_move, direction_to_move):
@@ -278,7 +277,6 @@ def _convert_point_map_to_byte_stream(points_dict):
         bit_list.append(1 - points_dict[coord])
 
     byte_list = [int(''.join(map(str, bit_list[i:i + 8])), 2) for i in range(0, 40, 8)]
-
     return byte_list
 
 

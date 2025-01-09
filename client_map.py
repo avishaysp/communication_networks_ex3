@@ -69,16 +69,21 @@ class WorldMap:
     def get(self, row, col):
         return self.matrix[row][col]
     
+    def remove_players(self):
+        self.matrix[self.current_cman_idx[0]][self.current_cman_idx[1]] = WorldMap.Entry.FLOOR.value
+        self.matrix[self.current_ghost_idx[0]][self.current_ghost_idx[1]] = WorldMap.Entry.FLOOR.value
+    
     def remove_point(self, row, col):
         self.matrix[row][col] = ' '
     
-    def move_cman(self, row, col):
-        self.matrix[self.current_cman_idx[0]][self.current_cman_idx[1]] = WorldMap.Entry.FLOOR.value
+    def place_point(self, row, col):
+        self.matrix[row][col] = '·'
+    
+    def place_cman(self, row, col):
         self.matrix[row][col] = WorldMap.Entry.CMAN.value
         self.current_cman_idx = (row, col)
 
-    def move_ghost(self, row, col):
-        self.matrix[self.current_ghost_idx[0]][self.current_ghost_idx[1]] = WorldMap.Entry.FLOOR.value
+    def place_ghost(self, row, col):
         self.matrix[row][col] = WorldMap.Entry.GHOST.value
         self.current_ghost_idx = (row, col)
     
