@@ -24,7 +24,8 @@ class ArgParser:
         parser.add_argument(
             "role",
             type=str,
-            help="The role of the client (e.g., client or server)"
+            help="The role of the client (e.g., cman, ghost, spectator)",
+            choices=STR_TO_ROLE.keys()
         )
         parser.add_argument(
             "addr",

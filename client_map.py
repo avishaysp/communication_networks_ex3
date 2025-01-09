@@ -37,7 +37,6 @@ class WorldMap:
             for j, val in enumerate(row):
                 if val == WorldMap.Entry.CMAN.value:
                     return (i, j)
-        print(self.to_string())
         assert False, 'Cman not found'
     
     def __get_ghost_index(self):
@@ -45,8 +44,6 @@ class WorldMap:
             for j, val in enumerate(row):
                 if val == WorldMap.Entry.GHOST.value:
                     return (i, j)
-
-        print(self.to_string())
         assert False, 'Ghost not found'
     
     def get_starting_points_indexes(self):
@@ -69,16 +66,21 @@ class WorldMap:
     def get(self, row, col):
         return self.matrix[row][col]
     
+    def remove_players(self):
+        self.matrix[self.current_cman_idx[0]][self.current_cman_idx[1]] = WorldMap.Entry.FLOOR.value
+        self.matrix[self.current_ghost_idx[0]][self.current_ghost_idx[1]] = WorldMap.Entry.FLOOR.value
+    
     def remove_point(self, row, col):
         self.matrix[row][col] = ' '
     
-    def move_cman(self, row, col):
-        self.matrix[self.current_cman_idx[0]][self.current_cman_idx[1]] = WorldMap.Entry.FLOOR.value
+    def place_point(self, row, col):
+        self.matrix[row][col] = '·'
+    
+    def place_cman(self, row, col):
         self.matrix[row][col] = WorldMap.Entry.CMAN.value
         self.current_cman_idx = (row, col)
 
-    def move_ghost(self, row, col):
-        self.matrix[self.current_ghost_idx[0]][self.current_ghost_idx[1]] = WorldMap.Entry.FLOOR.value
+    def place_ghost(self, row, col):
         self.matrix[row][col] = WorldMap.Entry.GHOST.value
         self.current_ghost_idx = (row, col)
     

@@ -185,10 +185,12 @@ class Game():
 				self.score += self.points[next_coords]
 				self.points[next_coords] = 0
 				if self.score >= WIN_SCORE:
+					print("Cman won")
 					self.declare_winner(Player.CMAN)
 			if (player == Player.CMAN and next_coords in self.cur_coords[1:]) or (player != Player.CMAN and next_coords == self.cur_coords[0]):
 				self.lives -= 1
 				if self.lives <= 0:
+					print("Spirit won")
 					self.declare_winner(Player.SPIRIT)
 				else:
 					self.next_round()
