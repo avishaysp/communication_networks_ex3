@@ -69,7 +69,7 @@ class Client:
         clear_print('\n'.join([self.msg(), self.attempts_repr(), self.map.to_string()]))
 
     def attempts_repr(self):
-        return f"Attempts: {self.attempts}/{MAX_ATTEMPTS}"
+        return f"Attempt: {self.attempts}/{MAX_ATTEMPTS}"
 
     def __recv_data(self):
         datas = []
@@ -108,7 +108,7 @@ class Client:
             self.status = Status.PLAYING
             self.__msg = 'Game started!'
         else:
-            self.__msg = 'Connected to server. Cannot move yet.'
+            self.__msg = 'Connected to server. Cannot move.'
 
         self.__update_attempts(attempts)
 
@@ -117,7 +117,7 @@ class Client:
         self.__place_cman_ghost(c_coords_b, s_coords_b)
 
     def __update_attempts(self, attempts):
-        self.attempts = attempts
+        self.attempts = attempts + 1
 
     def __place_cman_ghost(self, c_coords_b, s_coords_b):
         c_coords = c_coords_b[0], c_coords_b[1]
@@ -149,7 +149,7 @@ class Client:
         s_score = data[1]
         c_score = data[2]
         self.status = Status.GAME_OVER
-        clear_print(f'Game Over!\nWinner: {Role(winner).name}\nScores: Cman: {c_score}, Ghost: {s_score}')
+        clear_print(f'Game Over!\nWinner: {Role(winner).name}\nScores: Cman points: {c_score}, Ghost catches: {s_score}')
         self.exit('Exiting...')
 
     def __handle_error(self, data: bytes):

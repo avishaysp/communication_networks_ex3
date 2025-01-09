@@ -185,7 +185,7 @@ class CManServer:
         winner = 0x01 if self.game.get_winner() == 0 else 0x02
         lives, score = self.game.get_game_progress()
 
-        message = _create_bytes_message(GAME_END, winner, lives, score)
+        message = _create_bytes_message(GAME_END, winner, _lives_to_catches(lives), score)
 
         players = [self.cman, self.ghost]
 
@@ -218,7 +218,7 @@ class CManServer:
         should_ghost_freeze = 0x01 if self.game_status in freeze_status_list else 0x00
 
         lives, _ = self.game.get_game_progress()
-        attempts = _convert_lives(lives)
+        attempts = _lives_to_catches(lives)
 
         cords = self.game.get_current_players_coords()
         cman_cords, ghost_cords = cords[0], cords[1]
@@ -280,6 +280,6 @@ def _convert_point_map_to_byte_stream(points_dict):
     return byte_list
 
 
-def _convert_lives(lives):
+def _lives_to_catches(lives):
     return MAX_ATTEMPTS - lives
 
