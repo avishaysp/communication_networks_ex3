@@ -148,7 +148,6 @@ class Game():
 		bool: whether the player may move or not
 
 		"""
-		print(f"Checking if {player} can move in state {self.state}")
 		return (self.state == State.PLAY or (self.state == State.START and player == Player.CMAN))
 
 	def apply_move(self, player, direction):
@@ -167,9 +166,7 @@ class Game():
 		bool: Whether the game state was changed or not
 
 		"""
-		print(f"Applying move for {player} in direction {direction}")
 		if not self.can_move(player):
-			print("Can't move")
 			return False
 
 		p_coords = self.cur_coords[player]
@@ -178,16 +175,13 @@ class Game():
 		next_coords = (p_coords[0] + dr, p_coords[1] + dc)
 
 		if any(x < 0 for x in next_coords) or next_coords[0] >= self.board_dims[0] or next_coords[1] >= self.board_dims[1]:
-			print("Out of bounds")
 			return False
 		if self.board[next_coords[0]][next_coords[1]] not in gm.PASS_CHARS:
-			print("Hit a wall")
 			return False
 		else:
 			self.state = State.PLAY
 			self.cur_coords[player] = next_coords
 			if player == Player.CMAN and next_coords in self.points.keys():
-				print("Collected point")
 				self.score += self.points[next_coords]
 				self.points[next_coords] = 0
 				if self.score >= WIN_SCORE:
@@ -196,6 +190,7 @@ class Game():
 			if (player == Player.CMAN and next_coords in self.cur_coords[1:]) or (player != Player.CMAN and next_coords == self.cur_coords[0]):
 				self.lives -= 1
 				if self.lives <= 0:
+					print("Spirit won")
 					self.declare_winner(Player.SPIRIT)
 				else:
 					self.next_round()

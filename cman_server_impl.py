@@ -31,7 +31,7 @@ class CManServer:
         try:
             self.server_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         except socket.error as e:
-            print('Failed to create socket. Exiting...')
+            print(f'Failed to create socket. Error: {e}. Exiting...')
             exit()
         server_address = (SERVER_ADDR, self.port)
         self.server_socket.bind(server_address)
@@ -105,8 +105,6 @@ class CManServer:
             self.game_status = GameStatus.WAITING
             self.game.next_round()
 
-        print(f'server status: {self.game_status}')
-
         return message
 
     def _fill_cman_or_ghost(self, role, client_address):
@@ -124,7 +122,6 @@ class CManServer:
 
     # Move requests
     def _process_player_movement_request(self, data, client_address):
-        print("Processing player movement request")
         if self.game_status == GameStatus.PREGAME:
             return 6
 
@@ -139,8 +136,6 @@ class CManServer:
         direction_to_move = data[1]
 
         move_applied, changed_status = self._has_game_change_mode(player_to_move, direction_to_move)
-
-        print(f'Move applied: {move_applied}, changed status: {changed_status}')
 
         if self.game.get_winner() != Player.NONE:
             self.game_status = GameStatus.END
@@ -212,7 +207,6 @@ class CManServer:
         self._send_message(message, client)
 
     def _send_game_stats(self):
-        print("Sending game stats")
         freeze_status_list = [GameStatus.PREGAME, GameStatus.WAITING, GameStatus.START]
         should_cman_freeze = 0x01 if self.game_status == GameStatus.PREGAME else 0x00
         should_ghost_freeze = 0x01 if self.game_status in freeze_status_list else 0x00
@@ -223,11 +217,7 @@ class CManServer:
         cords = self.game.get_current_players_coords()
         cman_cords, ghost_cords = cords[0], cords[1]
 
-        print(f'Cman cords: {cman_cords}, Ghost cords: {ghost_cords}')
-
         points = self.game.get_points()
-        print(f'Points: {points}')
-        print(f'number 1 in points: {sum(points.values())}')
         converted_points = _convert_point_map_to_byte_stream(points)
 
         for watcher in self.watchers:
